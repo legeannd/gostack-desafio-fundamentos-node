@@ -6,6 +6,13 @@ interface Balance {
   total: number;
 }
 
+// Interface do DataTransferObject usado para criar uma transação
+interface CreateTransactionDTO {
+  title: string;
+  value: number;
+  type: 'income' | 'outcome';
+}
+
 class TransactionsRepository {
   private transactions: Transaction[];
 
@@ -14,15 +21,54 @@ class TransactionsRepository {
   }
 
   public all(): Transaction[] {
-    // TODO
+    return this.transactions;
   }
+
+  /* O método reduce é utilizado para iterar o array de transações e obter os valores do balanço.
+  Reduce utiliza um acumulador, que neste caso é um objeto do tipo Balance, e o array de Transactions.
+  Usando uma estrutura condicional, é possível verificar o tipo da transação, e adicionar o valor da transação no income ou outcome do acumulador.
+  Ao finalizar a iteração, o objeto acumulador é retornado, e é feita uma desestruturação para retornar apenas o income e outcome. */
 
   public getBalance(): Balance {
-    // TODO
+    const { income, outcome } = this.transactions.reduce(
+      (accumulator: Balance, transaction: Transaction) => {
+        switch (transaction.type) {
+          case 'income':
+            accumulator.income += transaction.value;
+            break;
+          case 'outcome':
+            accumulator.outcome += transaction.value;
+            break;
+          default:
+            break;
+        }
+
+        return accumulator;
+      },
+      {
+        income: 0,
+        outcome: 0,
+        total: 0,
+      },
+    );
+
+    const total = income - outcome;
+
+    return {
+      income,
+      outcome,
+      total,
+    };
   }
 
-  public create(): Transaction {
-    // TODO
+  // Método para criar uma nova transação, que recebe um objeto do tipo DTO
+
+  public create({ title, value, type }: CreateTransactionDTO): Transaction {
+    const transaction = new Transaction({ title, value, type });
+
+    this.transactions.push(transaction);
+
+    return transaction;
   }
 }
 
